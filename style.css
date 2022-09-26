@@ -1,0 +1,20 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600&display=swap');
+</style>
+@font-face {
+    font-family: VirgiTHeory;
+    src: url("font/VirgiTheory.ttf");
+}
+
+.background-color{
+    background-color: rgb(229, 87, 36);
+    font-family:VirgiTHeory;
+    
+    font-size: 25pt;
+
+}
+
+.font-color{
+color: darkseagreen;
+
+}
