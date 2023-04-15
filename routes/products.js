@@ -3,30 +3,99 @@ const router = express.Router();
 const { checkIfAuthenticated } = require('../middlewares');
 
 const { Product, Category, Tag } = require('../models');
+const dataLayer = require('../dal/products')
 
-const { bootstrapField, createProductForm } = require('../forms');
+const { bootstrapField, createProductForm, createSearchForm } = require('../forms');
 
 
-router.get('/', checkIfAuthenticated, async (req, res) => {
-    let products = await Product.collection().fetch({
-        withRelated: ['category', 'tags']
-    });
-    res.render('products/index', {
-        'products': products.toJSON()
+
+// router.get('/', checkIfAuthenticated, async (req, res) => {
+//     let products = await Product.collection().fetch({
+//         withRelated: ['category', 'tags']
+//     });
+//     res.render('products/index', {
+//         'products': products.toJSON()
+//     })
+// })
+
+router.get('/', async (req, res) => {
+  
+    // 1. get all the categories
+    const allCategories = await dataLayer.getAllCategories();
+    allCategories.unshift([0, '----']);
+
+
+    // 2. Get all the tags
+    const allTags = await dataLayer.getAllTags();
+
+ 
+   // 3. Create search form 
+    let searchForm = createSearchForm(allCategories, allTags);
+    let q = Product.collection();
+
+    searchForm.handle(req, {
+        'empty': async (form) => {
+            let products = await q.fetch({
+                withRelated: ['category']
+            })
+            res.render('products/index', {
+                'products': products.toJSON(),
+                'form': form.toHTML(bootstrapField)
+            })
+                   },
+        'error': async (form) => {
+            let products = await q.fetch({
+                withRelated: ['category']
+            })
+            res.render('products/index', {
+                'products': products.toJSON(),
+                'form': form.toHTML(bootstrapField)
+            })
+                    },
+        'success': async (form) => {
+            if (form.data.name) {
+                q.where('name', 'like', '%' +form.data.name + '%')
+           }
+
+           if (form.data.category_id && form.data.category_id != "0"
+) {
+                q.where('category_id', '=', form.data.category_id)
+           }
+
+           if (form.data.min_cost) {
+                q.where('cost', '>=', form.data.min_cost)
+           }
+
+           if (form.data.max_cost) {
+               q = q.where('cost', '<=', form.data.max_cost);
+           }
+
+            if (form.data.tags) {
+               q.query('join', 'products_tags', 'products.id', 'product_id')
+               .where('tag_id', 'in', form.data.tags.split(','))
+           }
+
+
+           let products = await q.fetch({
+               withRelated: ['category']
+            })
+            res.render('products/index', {
+                'products': products.toJSON(),
+                'form': form.toHTML(bootstrapField)
+            })
+        }
     })
 })
 
 router.get('/create', checkIfAuthenticated, async (req, res) => {
-    const allCategories = await Category.fetchAll().map((category) => {
-        return [category.get('id'), category.get('name')];
-    })
+    const allCategories = await dataLayer.getAllCategories();
 
-    const allTags = await Tag.fetchAll().map(tag => [tag.get('id'), tag.get('name')]);
+    const allTags = await dataLayer.getAllTags();
 
     const productForm = createProductForm(allCategories, allTags);
     res.render('products/create', {
         'form': productForm.toHTML(bootstrapField),
-        cloudinaryName: process.env.CLOUDINARY_NAME,
+        cloudinaryName: process.env.CLOUDINARY_CLOUD_NAME,
         cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
         cloudinaryPreset: process.env.CLOUDINARY_UPLOAD_PRESET
     })
@@ -35,10 +104,8 @@ router.get('/create', checkIfAuthenticated, async (req, res) => {
 
 router.post('/create', checkIfAuthenticated, async (req, res) => {
 
-    const allTags = await Tag.fetchAll().map(tag => [tag.get('id'), tag.get('name')]);
-    const allCategories = await Category.fetchAll().map((category) => {
-        return [category.get('id'), category.get('name')];
-    })
+    const allTags = await dataLayer.getAllTags();
+    const allCategories = await dataLayer.getAllCategories();
     const productForm = createProductForm(allCategories,allTags);
     productForm.handle(req, {
         'success': async (form) => {
@@ -65,19 +132,12 @@ router.post('/create', checkIfAuthenticated, async (req, res) => {
 router.get('/:product_id/update', checkIfAuthenticated, async (req, res) => {
     // retrieve the product
     const productId = req.params.product_id
-    const product = await Product.where({
-        'id': productId
-    }).fetch({
-        require: true,
-        withRelated: ['tags']
-    });
+    const product = dataLayer.getProductByID(productId);
     // fetch all the tags
-    const allTags = await Tag.fetchAll().map(tag => [tag.get('id'), tag.get('name')]);
+    const allTags = await dataLayer.getAllTags();
 
     // fetch all the categories
-    const allCategories = await Category.fetchAll().map((category) => {
-        return [category.get('id'), category.get('name')];
-    })
+    const allCategories = await dataLayer.getAllCategories();
     const productForm = createProductForm(allCategories, allTags);
 
     // fill in the existing values
@@ -96,7 +156,7 @@ router.get('/:product_id/update', checkIfAuthenticated, async (req, res) => {
         'form': productForm.toHTML(bootstrapField),
         'product': product.toJSON(),
         // 2 - send to the HBS file the cloudinary information
-        cloudinaryName: process.env.CLOUDINARY_NAME,
+        cloudinaryName: process.env.CLOUDINARY_CLOUD_NAME,
         cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
         cloudinaryPreset: process.env.CLOUDINARY_UPLOAD_PRESET
     })
@@ -106,19 +166,12 @@ router.get('/:product_id/update', checkIfAuthenticated, async (req, res) => {
 router.post('/:product_id/update', async (req, res) => {
 
     // fetch all the tags
-    const allTags = await Tag.fetchAll().map(tag => [tag.get('id'), tag.get('name')]);
+    const allTags = await dataLayer.getAllTags();
 
-    const allCategories = await Category.fetchAll().map((category) => {
-        return [category.get('id'), category.get('name')];
-    })
+    const allCategories = await dataLayer.getAllCategories();
 
     // fetch the product that we want to update
-    const product = await Product.where({
-        'id': req.params.product_id
-    }).fetch({
-        require: true,
-        withRelated: ['tags']
-    });
+    const product = await dataLayer.getProductByID(productId);
 
     // process the form
     const productForm = createProductForm(allCategories,allTags);
@@ -152,11 +205,7 @@ router.post('/:product_id/update', async (req, res) => {
 
 router.get('/:product_id/delete', async (req, res) => {
     // fetch the product that we want to delete
-    const product = await Product.where({
-        'id': req.params.product_id
-    }).fetch({
-        require: true
-    });
+    const product = await dataLayer.getProductByID(productId);
 
     res.render('products/delete', {
         'product': product.toJSON()

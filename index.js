@@ -5,6 +5,7 @@ const landingRoutes = require('./routes/landing');
 const productRoutes = require('./routes/products');
 const cloudinaryRoutes = require('./routes/cloudinary');
 const userRoutes = require('./routes/users');
+const shoppingCartRoutes = require('./routes/shoppingCart');
 const session = require('express-session');
 const flash = require('connect-flash');
 const csrf = require('csurf')
@@ -37,6 +38,7 @@ app.use(
 async function main() {
 
     app.use(session({
+        secret: process.env.SESSION_SECRET_KEY,
         store: new FileStore(),
         secret: 'keyboard cat',
         resave: false,
@@ -75,6 +77,7 @@ async function main() {
     app.use('/products', productRoutes);
     app.use('/users', userRoutes);
     app.use('/cloudinary', cloudinaryRoutes);
+    app.use('/shoppingCart', shoppingCartRoutes);
 
     // Share the user data with hbs files
     app.use(function (req, res, next) {

@@ -10,17 +10,18 @@
       <img src="" style="display:none" id="uploaded_image"/>
     </div>
     <input type="submit" value="Add Product" class="btn btn-primary"/>
-    {{/block}}
+    
 </form>
-{{/extends}}
+{{/block}}
 
 {{#block 'js'}}
-<!-- initialise cloudinary –->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+    integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+    crossorigin="anonymous"></script>
 <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
 
-<!-- get signature -->
+
 <script>
 function generateSignature(callback,params_to_sign){
   axios.get('/cloudinary/sign',{
@@ -61,3 +62,5 @@ document.getElementById("upload_widget").addEventListener("click", function(){
 </script>
 
 {{/block}}
+
+{{/extends}}

@@ -8,9 +8,9 @@
             "server": "localhost",
             "port": 3306,
             "driver": "MySQL",
-            "name": "mysql",
-            "database": "Test",
-            "username": "foo",
+            "name": "mys",
+            "database": "organic",
+            "username": "root",
             "askForPassword": true
         }
     ]
