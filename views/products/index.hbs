@@ -1,0 +1,50 @@
+{{#extends 'base'}}
+
+{{#block 'content'}}
+<input type="hidden" name="_csrf" value="{{csrfToken}}"/>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Cost</th>
+            <th>Description</th>
+            <th>Tags</th>
+        </tr>
+
+    </thead>
+    <tbody>
+        {{#each products}}
+        <tr>
+            <td>
+                {{this.id}}
+            </td>
+            <td>
+                {{this.name}}
+            </td>
+            <td>
+                {{this.category.name}}
+            </td>
+            <td>
+                {{this.cost}}
+            </td>
+            <td>
+                {{this.description}}
+            </td>
+            <td>
+                {{#each this.tags}}
+                <span class="badge bg-secondary">{{this.name}}</span>
+                {{/each}}
+            </td>
+            <td>
+                <a href="/products/{{this.id}}/update" class="btn btn-primary btn-sm">Update</a>
+                <a href="/products/{{this.id}}/delete" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+{{/block}}
+
+{{/extends}}
