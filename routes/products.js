@@ -18,7 +18,7 @@ const { bootstrapField, createProductForm, createSearchForm } = require('../form
 //     })
 // })
 
-router.get('/', async (req, res) => {
+router.get('/', checkIfAuthenticated, async (req, res) => {
   
     // 1. get all the categories
     const allCategories = await dataLayer.getAllCategories();

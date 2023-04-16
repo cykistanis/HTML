@@ -3,6 +3,7 @@ const router = express.Router();
 const crypto = require('crypto');
 // import in the CheckIfAuthenticated middleware
 
+const { checkIfAuthenticated } = require('../middlewares');
 
 const getHashedPassword = (password) => {
     const sha256 = crypto.createHash('sha256');
@@ -66,7 +67,7 @@ router.post('/login', async (req, res) => {
 
             if (!user) {
                 req.flash("error_messages", "Sorry, the authentication details you provided does not work.")
-                res.redirect('/users/login');
+                res.redirect('/users/profile');
             } else {
                 // check if the password matches
                 if (user.get('password') === getHashedPassword(form.data.password)) {
@@ -94,7 +95,7 @@ router.post('/login', async (req, res) => {
     })
 })
 
-router.get('/profile', (req, res) => {
+router.get('/profile', checkIfAuthenticated,(req, res) => {
     const user = req.session.user;
     if (!user) {
         req.flash('error_messages', 'You do not have permission to view this page');
@@ -107,10 +108,40 @@ router.get('/profile', (req, res) => {
 
 })
 
-router.get('/logout', (req, res) => {
-    req.session.user = null;
-    req.flash('success_messages', "Goodbye");
-    res.redirect('/users/login');
-})
+// router.get('/logout', (req, res) => {
+//     req.session.user = null;
+//     req.flash('success_messages', "Goodbye");
+//     res.redirect('/users/login');
+// })
+
+
+// router.get("/logout", (req, res) => {
+//     if (req.session.user) {
+//       req.session.destroy((err) => {
+//         if (err) {
+//           console.log(err);
+//         } else {
+//           res.redirect("/users/login");
+//         }
+//       });
+//     } else {
+//       res.redirect("/users/login");
+//     }
+//   });
+
+  router.get("/logout", (req, res) => {
+    if (req.session.user) {
+      delete req.session.user; // remove user data from session
+      req.session.destroy((err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.redirect("/users/login");
+        }
+      });
+    } else {
+      res.redirect("/users/login");
+    }
+  });
 
 module.exports = router;
