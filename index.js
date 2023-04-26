@@ -37,7 +37,7 @@ app.use(
 
 async function main() {
 
-    app.use(session({
+    app.use(({
         secret: process.env.SESSION_SECRET_KEY,
         store: new FileStore(),
         secret: 'keyboard cat',
